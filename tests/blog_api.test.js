@@ -37,7 +37,7 @@ const initialBlogs = [
         title: "TDD harms architecture",
         author: "Robert C. Martin",
         url: "http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html",
-        likes: 0,
+        likes: 1,
     },
     {
         title: "Type wars",
@@ -50,8 +50,7 @@ const initialBlogs = [
 const newBlog = {
     title: "Node tricks",
     author: "John Smith",
-    url: "https://google.com/",
-    likes: 6,
+    url: "https://google.com/"
 }
 
 beforeEach(async () => {
@@ -114,6 +113,16 @@ test('Title is correct', async () => {
     const response = await api.get('/api/blogs')
     const titles = response.body.map(e => e.title)
     assert(titles.includes('Node tricks'))
+})
+
+test('Number of likes is 0 by default', async () => {
+    await api
+        .post('/api/blogs')
+        .send(newBlog)
+
+    const response = await api.get('/api/blogs')
+    const likes = response.body.map(e => e.likes)
+    assert(likes.includes(0))
 })
 
 after(async () => {
