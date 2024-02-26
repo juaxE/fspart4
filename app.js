@@ -8,8 +8,8 @@ const blogRouter = require('./controllers/blog')
 
 
 
-const mongoUrl = config.MONGO_URL
-mongoose.connect(mongoUrl)
+const mongoUri = config.MONGO_URI
+mongoose.connect(mongoUri)
 
 app.use(cors())
 app.use(express.json())
