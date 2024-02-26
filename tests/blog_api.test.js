@@ -47,6 +47,13 @@ const initialBlogs = [
     }
 ]
 
+const newBlog = {
+    title: "Node tricks",
+    author: "John Smith",
+    url: "https://google.com/",
+    likes: 6,
+}
+
 beforeEach(async () => {
     await Blog.deleteMany({})
     for (const initialBlog of initialBlogs) {
@@ -80,6 +87,33 @@ test('the id field is without underscore', async () => {
     const response = await api.get('/api/blogs')
     const firstBlog = response.body[0]
     assert.ok(firstBlog.hasOwnProperty('id'), 'Expected field id')
+})
+
+test('blog is added', async () => {
+    const response = await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
+})
+
+test('count increases by 1', async () => {
+    await api
+        .post('/api/blogs')
+        .send(newBlog)
+
+    const response = await api.get('/api/blogs')
+    assert.strictEqual(response.body.length, initialBlogs.length + 1)
+})
+
+test('Title is correct', async () => {
+    await api
+        .post('/api/blogs')
+        .send(newBlog)
+
+    const response = await api.get('/api/blogs')
+    const titles = response.body.map(e => e.title)
+    assert(titles.includes('Node tricks'))
 })
 
 after(async () => {
