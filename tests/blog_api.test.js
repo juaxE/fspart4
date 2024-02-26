@@ -125,6 +125,34 @@ test('Number of likes is 0 by default', async () => {
     assert(likes.includes(0))
 })
 
+test('New blog without title results in 400', async () => {
+    const newBlogNoTitle = {
+        author: "John Smith",
+        url: "https://google.com/"
+    }
+    const response1 = await api
+        .post('/api/blogs')
+        .send(newBlogNoTitle)
+        .expect(400)
+
+    const response = await api.get('/api/blogs')
+    assert.strictEqual(response.body.length, initialBlogs.length)
+})
+
+test('New blog without url results in 400', async () => {
+    const newBlogNoUrl = {
+        title: "Node tricks",
+        author: "John Smith"
+    }
+    await api
+        .post('/api/blogs')
+        .send(newBlogNoUrl)
+        .expect(400)
+
+    const response = await api.get('/api/blogs')
+    assert.strictEqual(response.body.length, initialBlogs.length)
+})
+
 after(async () => {
     await mongoose.connection.close()
 })
