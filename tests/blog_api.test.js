@@ -4,58 +4,15 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
+const helper = require('./test_helper')
 
 const api = supertest(app)
 
-const initialBlogs = [
-    {
 
-        title: "React patterns",
-        author: "Michael Chan",
-        url: "https://reactpatterns.com/",
-        likes: 7,
-    },
-    {
-        title: "Go To Statement Considered Harmful",
-        author: "Edsger W. Dijkstra",
-        url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-        likes: 5,
-    },
-    {
-        title: "Canonical string reduction",
-        author: "Edsger W. Dijkstra",
-        url: "http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html",
-        likes: 12,
-    },
-    {
-        title: "First class tests",
-        author: "Robert C. Martin",
-        url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
-        likes: 10,
-    },
-    {
-        title: "TDD harms architecture",
-        author: "Robert C. Martin",
-        url: "http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html",
-        likes: 1,
-    },
-    {
-        title: "Type wars",
-        author: "Robert C. Martin",
-        url: "http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html",
-        likes: 2,
-    }
-]
-
-const newBlog = {
-    title: "Node tricks",
-    author: "John Smith",
-    url: "https://google.com/"
-}
 
 beforeEach(async () => {
     await Blog.deleteMany({})
-    for (const initialBlog of initialBlogs) {
+    for (const initialBlog of helper.initialBlogs) {
         let blogObject = new Blog(initialBlog)
         await blogObject.save()
     }
@@ -71,7 +28,7 @@ test('blogs are returned as json', async () => {
 
 test('there is the right amount of blogs', async () => {
     const response = await api.get('/api/blogs')
-    assert.strictEqual(response.body.length, initialBlogs.length)
+    assert.strictEqual(response.body.length, helper.initialBlogs.length)
 })
 
 test('the titles include one about React patterns', async () => {
@@ -91,7 +48,7 @@ test('the id field is without underscore', async () => {
 test('blog is added', async () => {
     const response = await api
         .post('/api/blogs')
-        .send(newBlog)
+        .send(helper.newBlog)
         .expect(201)
         .expect('Content-Type', /application\/json/)
 })
@@ -99,16 +56,16 @@ test('blog is added', async () => {
 test('count increases by 1', async () => {
     await api
         .post('/api/blogs')
-        .send(newBlog)
+        .send(helper.newBlog)
 
     const response = await api.get('/api/blogs')
-    assert.strictEqual(response.body.length, initialBlogs.length + 1)
+    assert.strictEqual(response.body.length, helper.initialBlogs.length + 1)
 })
 
 test('Title is correct', async () => {
     await api
         .post('/api/blogs')
-        .send(newBlog)
+        .send(helper.newBlog)
 
     const response = await api.get('/api/blogs')
     const titles = response.body.map(e => e.title)
@@ -118,7 +75,7 @@ test('Title is correct', async () => {
 test('Number of likes is 0 by default', async () => {
     await api
         .post('/api/blogs')
-        .send(newBlog)
+        .send(helper.newBlog)
 
     const response = await api.get('/api/blogs')
     const likes = response.body.map(e => e.likes)
@@ -130,13 +87,13 @@ test('New blog without title results in 400', async () => {
         author: "John Smith",
         url: "https://google.com/"
     }
-    const response1 = await api
+    await api
         .post('/api/blogs')
         .send(newBlogNoTitle)
         .expect(400)
 
     const response = await api.get('/api/blogs')
-    assert.strictEqual(response.body.length, initialBlogs.length)
+    assert.strictEqual(response.body.length, helper.initialBlogs.length)
 })
 
 test('New blog without url results in 400', async () => {
@@ -150,7 +107,18 @@ test('New blog without url results in 400', async () => {
         .expect(400)
 
     const response = await api.get('/api/blogs')
-    assert.strictEqual(response.body.length, initialBlogs.length)
+    assert.strictEqual(response.body.length, helper.initialBlogs.length)
+})
+
+test('A Blog can be deleted', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const id = blogsAtStart[0].id
+    await api
+        .delete(`/api/blogs/${id}`)
+        .expect(204)
+
+    const response = await api.get('/api/blogs')
+    assert.strictEqual(response.body.length, helper.initialBlogs.length - 1)
 })
 
 after(async () => {
