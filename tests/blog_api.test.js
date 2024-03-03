@@ -134,6 +134,19 @@ describe('when there is initially some notes saved', () => {
 
             assert.deepStrictEqual(response.body, existingBlog)
         })
+
+        test('A Blogs title can be updated', async () => {
+            const blogsAtStart = await helper.blogsInDb()
+            const existingBlog = blogsAtStart[0]
+            existingBlog.title = 'this title is so creative wow'
+            const id = existingBlog.id
+            const response = await api
+                .put(`/api/blogs/${id}`)
+                .send(existingBlog)
+
+            assert.notDeepStrictEqual(response.body.title, 'React patterns')
+            assert.deepStrictEqual(response.body, existingBlog)
+        })
     })
 })
 
