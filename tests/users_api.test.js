@@ -39,7 +39,82 @@ describe('when there is initially one user at db', () => {
 
         const usernames = usersAtEnd.map(u => u.username)
         assert(usernames.includes(newUser.username))
-    })
+    }),
+
+        describe('invalid users aren\'t added', async () => {
+            test('users without username aren\'t added', async () => {
+                const usersAtStart = await helper.usersInDb()
+
+                const newUser = {
+                    username: '',
+                    name: 'Matti Luukkainen',
+                    password: 'salainen',
+                }
+
+                await api
+                    .post('/api/users')
+                    .send(newUser)
+                    .expect(401)
+                    .expect('Content-Type', /application\/json/)
+
+                const usersAtEnd = await helper.usersInDb()
+                assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+            }),
+                test('users without password aren\'t added', async () => {
+                    const usersAtStart = await helper.usersInDb()
+
+                    const newUser = {
+                        username: 'tero',
+                        name: 'Matti Luukkainen',
+                        password: '',
+                    }
+
+                    await api
+                        .post('/api/users')
+                        .send(newUser)
+                        .expect(401)
+                        .expect('Content-Type', /application\/json/)
+
+                    const usersAtEnd = await helper.usersInDb()
+                    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+                }),
+                test('users with too short password aren\'t added', async () => {
+                    const usersAtStart = await helper.usersInDb()
+
+                    const newUser = {
+                        username: 'tero',
+                        name: 'Matti Luukkainen',
+                        password: 'aa',
+                    }
+
+                    await api
+                        .post('/api/users')
+                        .send(newUser)
+                        .expect(401)
+                        .expect('Content-Type', /application\/json/)
+
+                    const usersAtEnd = await helper.usersInDb()
+                    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+                }),
+                test('users with too short username aren\'t added', async () => {
+                    const usersAtStart = await helper.usersInDb()
+
+                    const newUser = {
+                        username: 'te',
+                        name: 'Matti Luukkainen',
+                        password: 'aaa',
+                    }
+
+                    await api
+                        .post('/api/users')
+                        .send(newUser)
+                        .expect(401)
+                        .expect('Content-Type', /application\/json/)
+
+                    const usersAtEnd = await helper.usersInDb()
+                    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+                })
+        })
 })
 
 after(async () => {
